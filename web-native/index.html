@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آوا نیتیو — تبدیل متن فارسی به گفتار</title>
+<style>
+  :root { --bg:#101418; --card:#1a2027; --text:#e8ecf1; --muted:#93a1b0; --accent:#4fa3ff; --ok:#3ecf8e; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Vazirmatn, Tahoma, sans-serif; background:var(--bg); color:var(--text); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: clamp(12px, 3vw, 28px); }
+  h1 { font-size: clamp(1.4rem, 5vw, 2rem); margin: 12px 0 4px; }
+  .en { color: var(--muted); font-size: .55em; font-weight: 400; }
+  p.sub { color: var(--muted); margin-top: 0; font-size: clamp(.85rem, 2.5vw, .95rem); }
+  textarea { width: 100%; min-height: 120px; background: var(--card); color: var(--text);
+    border: 1px solid #2a3441; border-radius: 12px; padding: 14px; font: inherit; resize: vertical; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+  select, button { font: inherit; border-radius: 10px; padding: 10px 16px; border: 1px solid #2a3441;
+    background: var(--card); color: var(--text); }
+  button.primary { background: var(--accent); color: #08243f; border: none; font-weight: 700; flex: 1; min-width: 140px; }
+  button:disabled { opacity: .5; }
+  .bar { height: 8px; background: var(--card); border-radius: 4px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  audio { width: 100%; margin-top: 12px; }
+  .status { color: var(--muted); font-size: .85rem; margin: 8px 0; min-height: 1.2em; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 24px; line-height: 1.8; }
+  @media (max-width: 480px) { .row { flex-direction: column; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>آوا نیتیو <span class="en">AVA Native</span></h1>
+  <p class="sub">موتور گفتار فارسی — رابط وب مستقل از مدل (اتصال به API محلی)</p>
+
+  <textarea id="text" placeholder="متن فارسی را اینجا بنویسید…">سلام دنیا! این صدای آوا نیتیو است.</textarea>
+
+  <div class="row">
+    <select id="voice" style="flex:1"></select>
+    <select id="speed" style="max-width:120px">
+      <option value="0.75">۰٫۷۵×</option>
+      <option value="1" selected>۱×</option>
+      <option value="1.25">۱٫۲۵×</option>
+      <option value="1.5">۱٫۵×</option>
+    </select>
+  </div>
+  <div class="row">
+    <button class="primary" id="go">تولید صدا</button>
+    <button id="stop">توقف</button>
+    <button id="dl" disabled>دانلود WAV</button>
+  </div>
+  <div class="bar"><div id="progress"></div></div>
+  <div class="status" id="status"></div>
+  <audio id="player" controls></audio>
+
+  <footer>رابط کاربری متعلق به پروژهٔ آوا نیتیو است · مدل غیرتجاری (CC BY-NC 4.0) تا جایگزینی با مدل اختصاصی · <span id="health"></span></footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let controller = null, lastWav = null;
+
+async function boot() {
+  try {
+    const h = await fetch('/v1/health').then(r => r.json());
+    $('health').textContent = `مدل‌های بارگذاری‌شده: ${h.models} · صداها: ${h.voices}`;
+    const voices = await fetch('/v1/voices').then(r => r.json());
+    $('voice').innerHTML = voices.map(v =>
+      `<option value="${v.voice_id}">${v.display_name}${v.commercial_ok ? '' : ' (غیرتجاری)'}</option>`).join('');
+  } catch (e) {
+    $('status').textContent = 'اتصال به API برقرار نشد — سرور را با «ava-cli serve» اجرا کنید.';
+  }
+}
+
+function setProgress(p) { $('progress').style.width = (p * 100) + '%'; }
+
+$('go').onclick = async () => {
+  const text = $('text').value.trim();
+  if (!text) return;
+  $('go').disabled = true; $('dl').disabled = true;
+  controller = new AbortController();
+  $('status').textContent = 'در حال تولید…';
+  setProgress(0.15);
+  try {
+    const res = await fetch('/v1/synthesis', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ text, voice: $('voice').value, speed: parseFloat($('speed').value) }),
+      signal: controller.signal });
+    setProgress(0.85);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || ('خطای ' + res.status));
+    }
+    const blob = await res.blob();
+    lastWav = blob;
+    $('player').src = URL.createObjectURL(blob);
+    $('dl').disabled = false;
+    setProgress(1);
+    const dur = res.headers.get('X-Duration-Seconds');
+    $('status').textContent = `آماده شد — مدت صدا: ${dur || '?'} ثانیه`;
+  } catch (e) {
+    if (e.name === 'AbortError') $('status').textContent = 'لغو شد.';
+    else $('status').textContent = 'خطا: ' + e.message;
+    setProgress(0);
+  }
+  $('go').disabled = false;
+};
+
+$('stop').onclick = () => controller && controller.abort();
+$('dl').onclick = () => {
+  if (!lastWav) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(lastWav);
+  a.download = 'ava-native.wav';
+  a.click();
+};
+
+boot();
+</script>
+</body>
+</html>

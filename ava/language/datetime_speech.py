@@ -141,6 +141,8 @@ def _read_time(m: re.Match) -> str:
         return " نیمه‌شب "
     if h == 12 and mi == 0 and s is None:
         return " ظهر "
+    if mi == 0 and s is None:
+        return f" {hour_word} "
     out = f" {hour_word} و {number_to_words(mi)} دقیقه"
     if s is not None:
         out += f" و {number_to_words(int(s))} ثانیه"

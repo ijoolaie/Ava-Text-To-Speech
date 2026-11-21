@@ -70,7 +70,7 @@ class DurationPredictor(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """(B, T, D) -> log-durations (B, T)."""
         h = self.conv(x.transpose(1, 2)).transpose(1, 2)
-        return torch.clamp(self.head(h).squeeze(-1), min=0.0)  # log-domain durations >= 0
+        return self.head(h).squeeze(-1)  # log-domain durations (can be negative; regulator floors at 1 frame)
 
 
 def length_regulator(x: torch.Tensor, durations: torch.Tensor, max_frames: int) -> tuple[torch.Tensor, torch.Tensor]:
@@ -138,9 +138,9 @@ class AVANativeTTS(nn.Module):
         """Training step. mel: (B, n_mels, F) padded; log_durations: (B, T) target."""
         enc = self.encoder(tokens, lengths, speaker_id)
         pred_log_dur = self.duration(enc)
-        # During training the decoder consumes the TARGET durations (FastSpeech-style);
-        # the predicted durations feed the MSE loss only.
-        reg, _ = length_regulator(enc, log_durations, self.cfg.max_frames)
+        # During training the decoder consumes the TARGET durations (FastSpeech-style),
+        # expanded from log domain to linear frames; predictions feed the MSE only.
+        reg, _ = length_regulator(enc, torch.exp(log_durations), self.cfg.max_frames)
         F_target = mel.size(2)
         if reg.size(1) > F_target:
             reg = reg[:, :F_target]
@@ -157,9 +157,10 @@ class AVANativeTTS(nn.Module):
 
     @torch.no_grad()
     def infer(self, tokens: torch.Tensor, lengths: torch.Tensor, speed: float = 1.0, speaker_id: torch.Tensor | None = None) -> torch.Tensor:
-        """tokens: (1, T) -> mel (n_mels, F)."""
+        """tokens: (1, T) -> mel (n_mels, F). Durations predicted in log domain,
+        expanded to linear frames (speed scales the log-duration)."""
         enc = self.encoder(tokens, lengths, speaker_id)
         log_dur = self.duration(enc) - math.log(max(speed, 0.05))
-        reg, _ = length_regulator(enc, log_dur, self.cfg.max_frames)
+        reg, _ = length_regulator(enc, torch.exp(log_dur), self.cfg.max_frames)
         _, mel_post = self.decoder(reg)
         return mel_post.squeeze(0).clamp(-1.0, 1.0)

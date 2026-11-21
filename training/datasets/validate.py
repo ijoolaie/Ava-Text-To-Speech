@@ -40,6 +40,11 @@ def _snr_db(x: np.ndarray) -> float:
     return 10.0 * np.log10(hi / lo)
 
 
+def estimate_snr_db(x: np.ndarray) -> float:
+    """Public energy-based SNR estimate (used by validate and voice quality checks)."""
+    return _snr_db(x)
+
+
 def validate_audio(entry, limits: ValidationLimits = ValidationLimits(), strict_sr: bool = True) -> list[str]:
     """Validate one manifest entry in place; returns the list of issues found."""
     import os
