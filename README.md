@@ -1,10 +1,49 @@
-# Ava
+# AVA Native (آوا)
 
-**Persian text-to-speech in the Pocket TTS format — a self-contained repository.**
+**Independent Persian neural text-to-speech platform — own language engine, own architecture (AVA-N1), pluggable runtime, training pipeline, API/CLI/Web, ONNX for Android & Windows.**
 
-Ava is an 18.2M-parameter Persian (Farsi) TTS model built on [Kyutai's Pocket TTS](https://github.com/kyutai-labs/pocket-tts) small-model recipe. It runs on CPU, phones and browsers, and speaks in the voice of a short audio prompt.
+AVA Native is the next generation of the Ava project: the product path is the **original AVA-N1 model** (non-autoregressive, trained on licensed data we own), served through an architecture-independent runtime. The legacy Pocket-TTS format (Kyutai-adapted, MIT code / CC BY-NC weights) remains as an optional comparison backend and historical reference — see [NOTICE.md](NOTICE.md) and [docs/PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md).
 
-This repository is **fully self-contained**: model weights, tokenizer, voices, web demo, and the complete training pipeline ship together — nothing is downloaded at runtime and nothing depends on the gated Hugging Face repository.
+## Repository layout
+
+| Path | What |
+| --- | --- |
+| `ava/language/` | Persian language engine: normalization, numbers/ordinals, Jalali+Gregorian dates, clock times, phone numbers, units/currency, mixed-text policies, pronunciation lexicon, segmentation, prosody |
+| `ava/models/native/` | **AVA-N1** — original NAR architecture (encoder → duration → decoder → 80-mel @ 24 kHz) |
+| `ava/audio/` | mel pipeline + Griffin-Lim v1 vocoder |
+| `ava/runtime/` | pluggable synthesis engine (`synthesize`, `synthesize_stream`, batch, stop) with backend registry |
+| `ava/voices/` | voice profiles, consent-enforced store, prompt quality checks |
+| `ava/api/` + `web-native/` | FastAPI HTTP API + Persian RTL web UI |
+| `ava/cli.py` | `ava-cli` — speak / voices / serve / validate-dataset / voice-quality |
+| `training/` | dataset pipeline (manifest/validation/segmentation/split), trainer with checkpoint/resume/export, ONNX export |
+| `tests/` | ~119 automated tests (all green on CPU) |
+| `docs/` | audit, architecture, roadmap, acceptance criteria, dataset/training/evaluation guides, Raya-Hybrid integration |
+
+## Quick start (native model)
+
+```bash
+pip install -e ".[serve]"
+
+# train the smoke pipeline end-to-end on CPU (~4 min) and export a bundle
+python scripts/make_native_smoke_data.py data/smoke_native 20
+python -m training.train_native --manifest data/smoke_native/manifest.jsonl --out runs/native_smoke_v1 --steps 300
+
+# speak with the trained bundle
+ava-cli speak --text "سلام دنیا" --voice ava-n1-ava --bundle runs/native_smoke_v1/bundle --out hello.wav
+
+# HTTP API + Persian web UI on http://127.0.0.1:8300/
+ava-cli serve --bundle runs/native_smoke_v1/bundle
+```
+
+Status, honest progress and known gaps: [PROJECT_STATUS.md](PROJECT_STATUS.md). Training a production Persian voice needs a GPU and licensed data (guide: [docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md)); the smoke model is a pipeline fixture, not a product voice.
+
+## Legacy format (historical / comparison — non-commercial weights)
+
+The original self-contained Ava stack (18.2M-param Pocket-TTS checkpoint, 24 kHz mono, RTF ≈ 4× on 2 CPU cores) still runs through the optional adapter:
+
+```bash
+python scripts/speak_fa.py --voice shirin --text "سلام، حال شما چطور است؟" --out hello.wav
+```
 
 | | |
 |---|---|
@@ -13,31 +52,7 @@ This repository is **fully self-contained**: model weights, tokenizer, voices, w
 | Speaker encoder (Mimi) | 9.7M params — encodes the voice prompt |
 | Sample rate / frame rate | 24 kHz mono / 12.5 Hz |
 | Total checkpoint | 27.9M params (~107 MB float32, shipped as 3 shards < 100 MB) |
-| Speed (2-core CPU) | ≈ 4× real time (measured: 4.3 s of audio in 1.0 s) |
-| Weights license | CC BY-NC 4.0 (non-commercial); code MIT — see [NOTICE.md](NOTICE.md) |
-
-## Quick start
-
-```bash
-pip install -e .            # torch, numpy, scipy, safetensors, sentencepiece, tokenizers, pydantic, pyyaml
-
-# Speak with one of the shipped voices (nava / shirin / arash)
-python scripts/speak_fa.py --voice shirin --text "سلام، حال شما چطور است؟" --out hello.wav
-
-# Or clone any voice from a 3-10 s WAV
-python scripts/speak_fa.py --voice my_voice.wav --text "این یک آزمایش است." --out mine.wav
-```
-
-Python API (mirrors `pocket_tts`):
-
-```python
-from ava import TTSModel
-
-model = TTSModel.load_model("config/fa.yaml")
-voice = model.get_state_for_audio_prompt("weights/voices/nava.safetensors")
-audio = model.generate_audio(voice, "سلام دنیا. این مدل فارسی روی پردازنده اجرا می‌شود.")
-# audio: float32 tensor [samples] at model.sample_rate (24000)
-```
+| Weights license | **CC BY-NC 4.0 (non-commercial)**; code MIT — see [NOTICE.md](NOTICE.md) |
 
 Web demo (runs the model in the browser via the WASM runtime):
 

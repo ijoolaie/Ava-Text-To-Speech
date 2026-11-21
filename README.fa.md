@@ -1,10 +1,49 @@
-# آوا
+# آوا نیتیو (AVA Native)
 
-**متن‌به‌گفتار فارسی در قالب Pocket TTS — یک مخزن کاملاً خوداتکا.**
+**پلتفرم مستقل تبدیل متن فارسی به گفتار — موتور زبان خودمان، معماری خودمان (AVA-N1)، runtime پلاگین‌پذیر، پایپ‌لاین آموزش، API/CLI/وب و ONNX برای اندروید و ویندوز.**
 
-آوا یک مدل گفتار فارسی با ۱۸.۲ میلیون پارامتر است که بر پایهٔ دستورِ «مدل کوچک» کیوتای (Pocket TTS) ساخته شده؛ روی CPU، گوشی و مرورگر اجرا می‌شود و با یک نمونهٔ صوتی کوتاه، به صدای همان گوینده حرف می‌زند.
+آوا نیتیو نسل بعدی پروژهٔ آوا است: مسیر محصول، **مدل اختصاصی AVA-N1** است (غیرخودبازگشتی، آموزش‌پذیر روی دادهٔ مجاز خودمان) که از طریق runtime مستقل از معماری سرو می‌شود. قالب Legacy (اقتباس MIT از کیوتای / وزن‌های CC BY-NC) به‌عنوان بک‌اند اختیاری مقایسه و مرجع تاریخی باقی می‌ماند — [NOTICE.md](NOTICE.md) و [docs/PROJECT_AUDIT.md](docs/PROJECT_AUDIT.md).
 
-این مخزن **بدون هیچ وابستگی بیرونی** است: وزن‌های مدل، توکنایزر، صداها، دموی مرورگری و خط کامل آموزش همه همین‌جا هستند — در زمان اجرا هیچ چیزی دانلود نمی‌شود و هیچ وابستگی‌ای به مخزن gated هاگینگ‌فیس وجود ندارد.
+## ساختار مخزن
+
+| مسیر | محتوا |
+| --- | --- |
+| `ava/language/` | موتور زبان فارسی: نرمال‌سازی، اعداد/ترتیبی، تاریخ شمسی/میلادی، ساعت، تلفن، واحدها/ارز، سیاست متن ترکیبی، واژگان تلفظ، جمله‌بندی، prosody |
+| `ava/models/native/` | **AVA-N1** — معماری اصلِ غیرخودبازگشتی (encoder → duration → decoder → 80-mel در 24kHz) |
+| `ava/audio/` | خط mel + vocoder نسخهٔ اول (Griffin-Lim) |
+| `ava/runtime/` | موتور سنتز پلاگین‌پذیر (synthesize/stream/batch/stop) با registry بک‌اند |
+| `ava/voices/` | پروفایل صداها، فروشگاه با الزام رضایت‌نامه، سنجش کیفیت |
+| `ava/api/` + `web-native/` | API سبک HTTP + رابط وب فارسی RTL |
+| `ava/cli.py` | `ava-cli` — speak / voices / serve / validate-dataset / voice-quality |
+| `training/` | پایپ‌لاین دیتاست (manifest/اعتبارسنجی/قطعه‌بندی/tقسیم)، trainer با checkpoint/resume/export، export ONNX |
+| `tests/` | ~۱۱۹ تست خودکار (همگی سبز روی CPU) |
+| `docs/` | ممیزی، معماری، نقشهٔ راه، معیارهای پذیرش، راهنماهای دیتاست/آموزش/ارزیابی، اتصال Raya-Hybrid |
+
+## شروع سریع (مدل Native)
+
+```bash
+pip install -e ".[serve]"
+
+# اجرای کامل پایپ‌لاین آموزش روی CPU (~۴ دقیقه) و export باندل
+python scripts/make_native_smoke_data.py data/smoke_native 20
+python -m training.train_native --manifest data/smoke_native/manifest.jsonl --out runs/native_smoke_v1 --steps 300
+
+# تولید صدا با باندل آموزش‌دیده
+ava-cli speak --text "سلام دنیا" --voice ava-n1-ava --bundle runs/native_smoke_v1/bundle --out hello.wav
+
+# API و رابط وب فارسی روی http://127.0.0.1:8300/
+ava-cli serve --bundle runs/native_smoke_v1/bundle
+```
+
+وضعیت واقعی و شکاف‌ها: [PROJECT_STATUS.md](PROJECT_STATUS.md). آموزش صدای فارسی واقعی به GPU و دادهٔ مجاز نیاز دارد ([docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md))؛ مدل smoke صرفاً fixture پایپ‌لاین است، نه صدای محصول.
+
+## قالب Legacy (تاریخی/مقایسه — وزن‌های غیرتجاری)
+
+مجموعهٔ خوداتکای قبلی آوا (چک‌پوینت Pocket-TTS با ۱۸.۲M پارامتر، ۲۴kHz مونو، RTF ≈ ۴× روی CPU دو هسته‌ای) از طریق آداپتور اختیاری اجرا می‌شود:
+
+```bash
+python scripts/speak_fa.py --voice shirin --text "سلام، حال شما چطور است؟" --out hello.wav
+```
 
 | | |
 |---|---|
@@ -13,20 +52,7 @@
 | انکودر گوینده (Mimi) | ۹.۷M پارامتر — کدگذاری نمونهٔ صدا |
 | نرخ نمونه / نرخ فریم | ۲۴kHz مونو / ۱۲.۵ هرتز |
 | کل چک‌پوینت | ۲۷.۹M پارامتر (~۱۰۷MB float32، در ۳ قطعهٔ زیر ۱۰۰MB) |
-| سرعت (CPU دو هسته‌ای) | ≈ ۴ برابر زمان واقعی (اندازه‌گیری: ۴.۳ ثانیه صدا در ۱.۰ ثانیه) |
-| مجوز وزن‌ها | CC BY-NC 4.0 (غیرتجاری)؛ کد MIT — [NOTICE.md](NOTICE.md) |
-
-## شروع سریع
-
-```bash
-pip install -e .
-
-# با صداهای همراه مخزن (nava / shirin / arash)
-python scripts/speak_fa.py --voice shirin --text "سلام، حال شما چطور است؟" --out hello.wav
-
-# یا کلون صدای دلخواه از یک wav کوتاه (۳ تا ۱۰ ثانیه)
-python scripts/speak_fa.py --voice my_voice.wav --text "این یک آزمایش است." --out mine.wav
-```
+| مجوز وزن‌ها | **CC BY-NC 4.0 (غیرتجاری)**؛ کد MIT — [NOTICE.md](NOTICE.md) |
 
 API پایتون (سازگار با `pocket_tts`):
 
