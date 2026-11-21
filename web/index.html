@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>آوا — تبدیل متن فارسی به گفتار در مرورگر</title>
+<style>
+  :root {
+    --bg: #f6f3ee; --card: #fffdf9; --ink: #211d1a; --muted: #6d655d; --line: #e2dbd1; --accent: #b4532a; --accent-ink: #fff;
+    --soft: #f0e9df; --ok: #2f7d4f; --bad: #b3261e;
+    --shadow: 0 1px 2px rgba(33,29,26,.06), 0 8px 28px rgba(33,29,26,.06);
+    --fa: "Vazirmatn", "Vazir", "Segoe UI", Tahoma, "Noto Naskh Arabic", sans-serif;
+    --fa-naskh: "Noto Naskh Arabic", "Geeza Pro", "Vazirmatn", Tahoma, serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f; --card: #201c16; --ink: #f1ebe2; --muted: #a59b8e; --line: #353027; --accent: #e07a4d; --accent-ink: #1b0f08;
+      --soft: #2a251d; --ok: #6fcf97; --bad: #ff8b84; --shadow: none; color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.7 var(--fa);
+         padding: 28px max(16px, env(safe-area-inset-left)) 48px max(16px, env(safe-area-inset-right)); }
+  main { max-width: 920px; margin: 0 auto; }
+  h1 { font-size: clamp(1.5rem, 5.5vw, 30px); font-weight: 700; margin: 0 0 4px; letter-spacing: -.01em; }
+  h1 .en { font-size: .62em; font-weight: 500; color: var(--muted); unicode-bidi: plaintext; }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+  .note { color: var(--muted); font-size: 13px; margin: 4px 2px 14px; min-height: 1.6em; }
+  label.field { display: block; font-weight: 600; font-size: 13px; color: var(--muted); margin: 14px 0 6px; letter-spacing: .02em; }
+  textarea { width: 100%; min-height: 150px; resize: vertical; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px;
+             background: var(--bg); color: var(--ink); font: 19px/1.8 var(--fa-naskh); }
+  textarea:focus, select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chip { border: 1px solid var(--line); background: var(--soft); color: var(--ink); border-radius: 999px; padding: 4px 14px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .chip:hover { border-color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  select, input[type=number] { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .val { font-variant-numeric: tabular-nums; color: var(--ink); }
+  .actions { display: flex; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  button.main { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 11px 26px; font: 600 15px var(--fa); cursor: pointer; }
+  button.main:disabled { opacity: .55; cursor: progress; }
+  button.sec { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 10px 18px; font: 15px var(--fa); cursor: pointer; }
+  button.sec:hover, a.btn:hover { border-color: var(--accent); }
+  #status { color: var(--muted); font-size: 13px; }
+  #status.err { color: var(--bad); }
+  .modelbox { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; margin-top: 20px; padding: 12px 16px; background: var(--soft); border-radius: 12px; font-size: 14px; }
+  .modelbox #modeltext { flex: 1 1 260px; min-width: 0; }
+  .modelbox a { color: var(--muted); font-size: 13px; }
+  label.chk { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  progress { width: 100%; height: 8px; accent-color: var(--accent); margin-top: 14px; }
+  .out { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 16px; }
+  audio { width: 100%; }
+  .caps { margin-top: 14px; padding: 12px 16px; background: var(--soft); border-radius: 12px; max-height: 15em; overflow-y: auto;
+          font: 22px/2.05 var(--fa-naskh); scroll-behavior: smooth; }
+  .caps .s { display: block; opacity: .5; margin: 0 0 6px; transition: opacity .25s; }
+  .caps .s.cur { opacity: 1; }
+  .caps .w { padding: 1px 4px; border-radius: 7px; cursor: pointer; transition: background .08s, color .08s; }
+  .caps .w:hover { background: var(--line); }
+  .caps .s.cur .w:not(.done):not(.now) { color: var(--muted); }
+  .caps .w.now { background: var(--accent); color: var(--accent-ink); }
+  .capnote { color: var(--muted); font-size: 12px; margin: 6px 2px 0; }
+  .wave { display: block; width: 100%; height: 120px; cursor: pointer; margin: 2px 0 0; touch-action: none; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 18px 0 0; }
+  .stat { background: var(--soft); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+  .stat .l { display: block; color: var(--muted); font-size: 12px; letter-spacing: .03em; }
+  .stat b { display: block; font-size: 26px; line-height: 1.25; margin: 4px 0 2px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat .c { display: block; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .playrow { display: flex; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .playrow audio { flex: 1 1 300px; min-width: 0; }
+  .btn { border: 1px solid var(--line); border-radius: 999px; padding: 10px 20px; color: var(--ink); text-decoration: none; font-size: 15px; white-space: nowrap; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 18px; line-height: 1.8; }
+  footer a { color: inherit; }
+  [hidden] { display: none !important; }
+  #loadfail { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--bad); border-radius: 12px; color: var(--ink); font-size: 14px; line-height: 1.8; }
+  #loadfail code { background: var(--soft); border-radius: 6px; padding: 1px 6px; }
+  @media (max-width: 640px) {
+    body { padding-top: 18px; }
+    .card { padding: 16px 14px; border-radius: 14px; }
+    .caps { font-size: 19px; }
+    .stat b { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>آوا <span class="en">Ava&nbsp;TTS</span></h1>
+  <p class="sub">تبدیل متن فارسی به گفتار، درست در مرورگر شما. مدلی با ۱۸ میلیون پارامتر؛ متن شما هرگز از دستگاه خارج نمی‌شود.</p>
+
+  <div id="loadfail" hidden><b>اسکریپت صفحه بارگذاری نشد و همین‌جا هیچ‌چیز کار نمی‌کند.</b>
+  اگر فایل را با دابل‌کلیک و از طریق <code>file://</code> باز کرده‌اید، مرورگر اجازه اجرای ماژول‌ها را نمی‌دهد.
+  پوشه را با <code>python3 serve.py</code> سرو کنید و <code>http://localhost:8000</code> را باز کنید.</div>
+
+  <section class="card">
+    <p class="note" id="engineNote">مدل داخل همین صفحه (WebAssembly) اجرا می‌شود؛ هیچ چیز به سروری فرستاده نمی‌شود. مدل (حدود ۱۰۷ مگابایت) فقط با کلیک شما دانلود می‌شود و پس از آن در همین مرورگر می‌ماند.</p>
+
+    <label class="field" for="text">متن</label>
+    <textarea id="text" dir="rtl" lang="fa" spellcheck="false">سلام، حال شما چطور است؟ امیدوارم روز خوبی داشته باشید.</textarea>
+    <div class="chips" id="samples"></div>
+
+    <div class="grid">
+      <div><label class="field" for="voice">صدا</label>
+        <select id="voice"></select></div>
+      <div><label class="field" for="temp">تنوع <span class="val" id="tempVal">0.3</span></label>
+        <input type="range" id="temp" min="0" max="1" step="0.05" value="0.3"></div>
+      <div><label class="field" for="seed">Seed</label><input type="number" id="seed" value="1" min="0" step="1"></div>
+    </div>
+
+    <div class="modelbox" id="modelbox" hidden>
+      <span id="modeltext"></span>
+      <button class="sec" id="dlmodel" type="button" hidden>دانلود مدل</button>
+      <a href="#" id="rmmodel" hidden>حذف از این مرورگر</a>
+    </div>
+
+    <div class="actions">
+      <button class="main" id="go" type="button">بگو</button>
+      <button class="sec" id="stop" type="button" hidden>توقف</button>
+      <label class="chk" id="streamBox" title="هر قطعه ۸۰ میلی‌ثانیه‌ای همان لحظه که ساخته می‌شود پخش می‌شود، به‌جای انتظار برای کل جمله"><input type="checkbox" id="stream"> پخش همزمان با تولید</label>
+      <span id="status" role="status"></span>
+    </div>
+    <progress id="load" max="1" value="0" hidden></progress>
+
+    <div class="out" id="out" hidden>
+      <canvas id="wave" class="wave" role="img" aria-label="نمودار موج گفتار؛ برای پرش کلیک کنید"></canvas>
+      <div class="caps" id="caps" dir="rtl" lang="fa" aria-label="زیرنویس" hidden></div>
+      <p class="capnote" id="capnote" hidden>زیرنویس همان چیزی است که گفته می‌شود (اعداد به حروف). زمان‌بندی کلمات تخمینی است؛ روی هر کلمه کلیک کنید تا از همان‌جا پخش شود.</p>
+      <div class="stats" id="stats"></div>
+      <div class="playrow"><audio id="player" controls></audio><a class="btn" id="dl" download="Ava.wav" hidden>دانلود WAV</a></div>
+    </div>
+  </section>
+  <footer>مدل غیرتجاری است (CC BY-NC 4.0) · رانتایم: Phonon / xn-ptts 0.7.1 (MIT یا Apache-2.0) · رابط کاربری و کد اپلیکیشن متعلق به همین پروژه است.</footer>
+</main>
+<script>setTimeout(function () { if (!window.__avaStarted) document.getElementById("loadfail").hidden = false; }, 3000);</script>
+<script>window.AVA = { voices: ["nava", "shirin", "arash"] };</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

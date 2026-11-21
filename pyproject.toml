@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ava"
+version = "1.0.0"
+description = "Ava: 18.2M-parameter Persian text-to-speech in the Pocket TTS format — self-contained repo with weights, web demo and a full training pipeline."
+readme = "README.md"
+requires-python = ">=3.10,<3.15"
+license = { file = "LICENSE" }
+authors = [{ name = "Ava contributors" }]
+keywords = ["tts", "text-to-speech", "persian", "pocket-tts", "kyutai", "speech"]
+dependencies = [
+    "torch>=2.5.0",
+    "numpy>=2",
+    "scipy>=1.5.0",
+    "safetensors>=0.4.0",
+    "sentencepiece>=0.2.1",
+    "tokenizers>=0.21",
+    "pydantic>=2",
+    "pyyaml>=6.0",
+    "typing-extensions>=4.10",
+]
+
+[project.optional-dependencies]
+audio = ["soundfile>=0.12.0"]
+serve = ["fastapi>=0.100", "uvicorn>=0.13", "python-multipart>=0.0.21"]
+dev = ["pytest>=8", "soundfile>=0.12.0"]
+
+[tool.setuptools.packages.find]
+include = ["ava*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,54 @@
+# Smoke training configuration — verifies the whole pipeline on CPU in minutes.
+#
+# A tiny flow LM (same tokenizer, same frozen Mimi latents) trains on a handful
+# of clips. The point is loss decrease and export correctness, not speech quality.
+# The audio can be bootstrapped: generate clips with the released model
+# (scripts/speak_fa.py), then run training/data/prepare_data.py on them.
+
+run_name: smoke-cpu
+seed: 0
+
+data:
+  cache_dir: data_cache/smoke
+  max_frames: 250
+  max_tokens: 64
+  min_frames: 8
+  holdout_ratio: 0.15
+
+model:
+  config: training/configs/smoke_arch.yaml
+  init_from: null
+  train_speaker_proj: true
+  speaker_cond: self
+
+optim:
+  lr: 2.0e-3
+  betas: [0.9, 0.95]
+  weight_decay: 0.01
+  warmup_steps: 20
+  total_steps: 400
+  cosine_min_ratio: 0.05
+  grad_clip: 1.0
+
+loss:
+  noise_std: 1.0
+  latent_loss_weight: 1.0
+  eos_loss_weight: 1.0
+
+stats:
+  ema_decay: 0.999
+
+ema:
+  decay: 0.99
+  warmup_steps: 10
+
+train:
+  batch_size: 4
+  grad_accum: 1
+  log_every: 10
+  ckpt_every: 200
+  eval_every: 100
+  out_dir: runs/smoke
+
+precision: fp32
+device: cpu

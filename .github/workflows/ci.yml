@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Unit tests (checkpoint compat, tokenizer, chunking, normalizer)
+        run: python -m pytest tests/ -q -k "not train_real"
+
+      - name: Smoke data + training + export (CPU)
+        run: |
+          python scripts/make_smoke_data.py --n-clips 8
+          python -m training.data.prepare_data \
+            --manifest data_cache/smoke/smoke_manifest.csv \
+            --arch training/configs/smoke_arch.yaml \
+            --out data_cache/smoke
+          python -m training.train_flow_lm \
+            --config training/configs/smoke_cpu.yaml \
+            --override optim.total_steps=120
+
+      - name: Export round-trip
+        run: |
+          python -m training.export \
+            --checkpoint runs/smoke/checkpoint-latest.pt \
+            --arch training/configs/smoke_arch.yaml \
+            --out runs/smoke/exported/model.safetensors
+
+      - name: Real-latent training tests
+        run: python -m pytest tests/ -q -k train_real
+
+      - name: Inference smoke test (short generation)
+        run: |
+          python - <<'EOF'
+          from ava import TTSModel
+          model = TTSModel.load_model("config/fa.yaml")
+          voice = model.get_state_for_audio_prompt("weights/voices/shirin.safetensors")
+          audio = model.generate_audio(voice, "سلام دنیا.")
+          assert audio.numel() > 24000, audio.shape
+          print(f"generated {audio.numel()/24000:.1f}s OK")
+          EOF
