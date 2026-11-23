@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ava"
-version = "1.1.0"
-description = "Ava: 18.2M-parameter Persian text-to-speech in the Pocket TTS format — self-contained repo with weights, web demo and a full training pipeline."
+version = "1.1.1"
+description = "Ava (AVA Native): independent, offline Persian text-to-speech engine with the original AVA-N1 architecture — CPU inference and a full training pipeline."
 readme = "README.md"
 requires-python = ">=3.10,<3.15"
 license = { file = "LICENSE" }
 authors = [{ name = "Ava contributors" }]
-keywords = ["tts", "text-to-speech", "persian", "pocket-tts", "kyutai", "speech"]
+keywords = ["tts", "text-to-speech", "persian", "speech", "offline", "ava-n1"]
 dependencies = [
     "torch>=2.5.0",
     "numpy>=2",

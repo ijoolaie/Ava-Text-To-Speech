@@ -1,6 +1,6 @@
 # قراردادهای مرزی هستهٔ AVA Native (NATIVE CONTRACTS)
 
-نسخهٔ 1.1.0 · فاز ۱ · این قراردادها پایدارند و فقط با نسخهٔ جدید API تغییر می‌کنند.
+نسخهٔ 1.1.1 · فاز ۱ · این قراردادها پایدارند و فقط با نسخهٔ جدید API تغییر می‌کنند. (اصلاح closeout فاز ۱: فرمت باندل با کد واقعی `training/train_native.py` هماهنگ شد و وضعیت مجوز صدای Native دقیق شد.)
 
 چهار مرز مستقل هستهٔ Native و قرارداد دقیق هر یک. هیچ مرزی به کد یا وزن خارجی وابسته نیست؛ جزئیات استقلال در `docs/CORE_INDEPENDENCE_AUDIT.md`.
 
@@ -18,7 +18,10 @@
 - ورودی استنتاج: `infer(tokens [1,T] int, lengths [1] int, speed float, speaker_id [1] int)`
 - خروجی: mel `(n_mels=80, F)` float32 در بازهٔ [-1, 1]؛ `F ≤ cfg.max_frames`
 - تضمین: استنتاج NAR قطعی (با ورودی یکسان، خروجی یکسان؛ eval/no_grad)
-- آموزش و استنتاج جدا هستند: `training/train_native.py` → `export_native_bundle()` → باندل استنتاج (`ava-native-bundle`: weights.safetensors + tokenizer.json + config.json + meta.json)
+- آموزش و استنتاج جدا هستند: `training/train_native.py` → `export_native_bundle()` → باندل استنتاج. **فرمت واقعی باندل (سه فایل، طبق کد):**
+  - `ava_n1.pt` — چک‌پوینت Torch (`torch.save({"model": state_dict, "config": dict(cfg)})`)؛ بارگذاری با `load_native_bundle()` (`torch.load`, `map_location="cpu"`)
+  - `tokenizer.json` — واژگان کاراکتری (`{"type": "ava-n1-char", "vocab": [...]}`)
+  - `meta.json` — `{"format": "ava-native-n1", "params_m", "sample_rate", "mel": {"n_mels", "hop"}}`
 - نکتهٔ سازگاری: `infer` خروجی batch-1 را فشرده می‌کند `(n_mels, F)`؛ نسخه‌های بعدی API با نام متفاوت و batch صریح ارائه می‌شوند
 
 ## ۳. Vocoder (`ava.audio.vocoder`)
@@ -36,4 +39,5 @@
 - استریم: `synthesize_stream(text, voice)` → یک chunk برای هر جمله؛ توقف: `stop()` + event درخواستی → `SynthesisCancelled`
 - خروجی صوتی: `wav_bytes(result)` — WAV PCM-16 مونو 24kHz
 - آفلاین: هیچ I/O شبکه در هیچ مسیری؛ CPU-only؛ بدون import اجباری Legacy (تست: `tests/test_core_independence.py`)
+- **وضعیت صدای Native:** صداهای `ava-n1-*` **آزمایشی**اند (باندل‌های آموزش‌ندیدهٔ fixture داخلی) و `commercial_ok=False`؛ مجوز وزن‌های نهایی هنوز تعیین نشده و پس از تأمین دیتاست مجاز + آموزش واقعی (فاز ۳) مشخص می‌شود. مجوز MIT فقط کد مخزن را پوشش می‌دهد، نه وزن‌های مدل را.
 - وزن‌های Legacy (CC BY-NC) در مسیر Native هرگز استفاده نمی‌شوند؛ آداپتور `LegacyPocketTTSBackend` فقط برای مقایسه است و صداهایش `commercial_ok=False`

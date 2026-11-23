@@ -2,7 +2,7 @@
 
 - تاریخ: 2026-11-23
 - نسخهٔ پایه: **AVA_Phase-0_Roadmap_v1.0.0** (کامیت مبنای شروع: `6bf7930`)
-- شاخه: `feature/ava-native` · نسخهٔ جدید پروژه: **1.1.0** (`pyproject.toml`)
+- شاخه: `feature/ava-native` · نسخهٔ پروژه: **1.1.0** در فاز ۱ → **1.1.1** پس از اصلاحات closeout (`pyproject.toml`)
 - دامنه: استقلال هستهٔ Native و مرزبندی Legacy — بدون بازنویسی معماری، بدون آموزش، بدون قابلیت جدید
 
 ## ۱. هدف و نتیجه
@@ -14,7 +14,7 @@
 | فایل | محتوا |
 | --- | --- |
 | `ava/audio/vocoder.py` | مرز مستقل Vocoder: کلاس انتزاعی `Vocoder`، پیاده‌سازی موقت `GriffinLimVocoder` (v1، بدون وزن)، رجیستری `get_vocoder` برای vocoder عصبی آینده |
-| `tests/test_core_independence.py` | ۱۳ تست استقلال: import هسته در پروسهٔ بلوکه‌شدهٔ Legacy، پویش AST سطح ماژول مسیر Native، قرارداد frontend/model/vocoder، سنتز کامل بدون Legacy، CLI بدون Legacy، ایزوله‌سازی وب Legacy |
+| `tests/test_core_independence.py` | ۱۳ تست استقلال در اجرای فاز ۱ (پس از اصلاح closeout: ۱۴ تست با افزودن تست سازگاری فرمت باندل): import هسته در پروسهٔ بلوکه‌شدهٔ Legacy، پویش AST سطح ماژول مسیر Native، قرارداد frontend/model/vocoder، سنتز کامل بدون Legacy، CLI بدون Legacy، ایزوله‌سازی وب Legacy |
 | `docs/CORE_INDEPENDENCE_AUDIT.md` | کلاسه‌بندی کامل A/B/C/D همهٔ اجزا + قرارداد و جایگزین موردنیاز هر جزء اقتباسی |
 | `docs/NATIVE_CONTRACTS.md` | قرارداد پایدار چهار مرز: Text Frontend / Acoustic Model / Vocoder / Runtime |
 | `docs/RUNTIME_INSTALL.md` | نصب مسیر Native (بدون وابستگی Legacy)، باندل مدل، CLI/API/وب، خطاهای نبود وزن، محدودیت‌های فعلی |
@@ -45,3 +45,20 @@
 ## ۵. چیزهایی که تغییر نکردند (حفظ قراردادها)
 
 API (`/v1/synthesis`، `/v1/synthesis/stream`، voices/models/health)، CLI (`ava-cli`)، فرمت WAV 24kHz mono PCM-16، معماری AVA-N1، قرارداد باندل استنتاج، رفتار موتور زبان (تست طلایی ثابت) — همگی بدون تغییر.
+
+---
+
+# ضمیمه: اصلاحات closeout فاز ۱ (نسخهٔ 1.1.1 — 2026-11-23)
+
+بازبینی فاز ۱ پنج ناهماهنگی مشخص کرد؛ همه رفع شدند، بدون توسعه قابلیت و بدون تغییر معماری. جزئیات کامل: `PHASE1_CLOSEOUT.md`.
+
+| # | اصلاح | پرونده‌ها |
+| --- | --- | --- |
+| ۱ | فرمت باندل در مستندات با کد واقعی هماهنگ شد: `ava_n1.pt` (چک‌پوینت Torch) + `tokenizer.json` + `meta.json`؛ فرمت فرضی `weights.safetensors + config.json` حذف شد. کد آموزش/بارگذاری تغییر نکرد | `docs/NATIVE_CONTRACTS.md`، `docs/RUNTIME_INSTALL.md` |
+| ۲ | دستور نصب API از `.[api]` فرضی به گروه واقعی `.[serve]` اصلاح شد (+`.[dev]`) | `docs/RUNTIME_INSTALL.md` |
+| ۳ | صدای Native دیگر «MIT/تجاری» اعلام نمی‌شود: «آزمایشی — مجوز وزن نهایی تعیین‌نشده»، `commercial_ok=False`؛ تفکیک مجوز کد از وزن | `ava/runtime/backends.py`، `tests/test_runtime.py`، `docs/RUNTIME_INSTALL.md`، `docs/NATIVE_CONTRACTS.md` |
+| ۴ | هویت بسته: توضیح و کلیدواژه‌ها بدون pocket-tts/kyutai و با هویت AVA Native؛ منشأ Legacy همچنان در NOTICE/ممیزی حفظ شده | `pyproject.toml` |
+| ۵ | شمارش تست‌ها با واقعیت تطبیق داده شد (۱۴ تست استقلال، ۱۲۹ کل)؛ عدد «۱۱» در ممیزی اشتباه نگارشی بود | سه سند + ممیزی |
+| — | ضمنی: نام متغیر env واقعی `AVA_NATIVE_BUNDLES`، فلگ واقعی `speak --text`، دستور واقعی smoke-training، گروه `[serve]` | `docs/RUNTIME_INSTALL.md` |
+
+**نتیجهٔ تست closeout (واقعی):** `tests/test_core_independence.py + test_runtime.py + test_platform.py` → **۳۷ سبز + ۳ skip (تست‌های وزن Legacy در چک‌اوت بدون وزن) ، exit 0**؛ اعتبارسنجی metadata بسته ۱۲/۱۲ PASS؛ نصب واقعی `pip install -e ".[serve]"` موفق. جزئیات در `docs/TEST_REPORT.md`.

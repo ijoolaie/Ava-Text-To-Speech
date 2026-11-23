@@ -229,6 +229,23 @@ class TestInferencePathWithInternalWeights(unittest.TestCase):
             raw = wav_bytes(res)
             self.assertEqual(raw[:4], b"RIFF")
 
+    def test_bundle_format_matches_documentation(self):
+        """باندل واقعی دقیقاً سه فایل است (ava_n1.pt + tokenizer.json + meta.json)
+        — همان فرمت مستندشده در NATIVE_CONTRACTS/RUNTIME_INSTALL؛ فرمت فرضی
+        weights.safetensors + config.json نباید در مستندات باندل Native برگردد."""
+        import json
+        with tempfile.TemporaryDirectory() as tmp:
+            bundle = self._make_bundle(os.path.join(tmp, "bundle"))
+            self.assertEqual(set(os.listdir(bundle)),
+                             {"ava_n1.pt", "tokenizer.json", "meta.json"})
+            meta = json.load(open(os.path.join(bundle, "meta.json"), encoding="utf-8"))
+            self.assertEqual(meta["format"], "ava-native-n1")
+            self.assertIn("sample_rate", meta)
+            for doc in ("docs/NATIVE_CONTRACTS.md", "docs/RUNTIME_INSTALL.md"):
+                text = open(os.path.join(ROOT, doc), encoding="utf-8").read()
+                self.assertIn("ava_n1.pt", text, doc)
+                self.assertNotIn("weights.safetensors + tokenizer.json", text, doc)
+
     def test_runtime_synthesis_without_legacy_modules(self):
         """§۶-۵ — سنتز کامل در پروسه‌ای که همهٔ ماژول‌های Legacy در آن بلوکه‌اند."""
         script = "\n".join([

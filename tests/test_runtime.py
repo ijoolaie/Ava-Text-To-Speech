@@ -45,7 +45,9 @@ class TestSynthesisEngine(unittest.TestCase):
     def test_load_and_list_voices(self):
         voices = self.engine.list_voices()
         self.assertTrue(any(v.voice_id == "ava-n1-ava" for v in voices))
-        self.assertTrue(all(v.commercial_ok for v in voices))
+        # صدای Native آزمایشی است: وزن آموزش‌ندیده، مجوز نهایی تعیین‌نشده → تجاری نیست
+        self.assertFalse(any(v.commercial_ok for v in voices))
+        self.assertIn("آزمایشی", voices[0].license)
 
     def test_synthesize_real_wav(self):
         """AC5.2 — خروجی WAV واقعی با SR و کانال مشخص."""

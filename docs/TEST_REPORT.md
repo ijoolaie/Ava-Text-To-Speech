@@ -6,7 +6,7 @@
 
 مطابق §۶ مأموریت فاز ۱ فقط تست‌های مرتبط با تغییرات اجرا شد. تغییرات این فاز: `ava/__init__.py` (تنبل‌سازی)، `ava/audio/vocoder.py` (جدید)، `ava/runtime/backends.py` (اتصال به مرز vocoder)، `ava/audio/__init__.py`، `tests/test_core_independence.py` (جدید) و مستندات.
 
-### تست‌های جدید — `tests/test_core_independence.py` (۱۳ تست، همگی سبز)
+### تست‌های جدید — `tests/test_core_independence.py` (۱۳ تست در اجرای فاز ۱؛ پس از اصلاح closeout: ۱۴ تست — تست «سازگاری فرمت باندل مستندات↔کد» اضافه شد)
 
 | الزام §۶ | تست |
 | --- | --- |
@@ -33,6 +33,35 @@ python3 -m pytest tests/ -q -p no:warnings   (ترتیب استاندارد ال
 ### هنوز تست‌نشده (بدون تغییر نسبت به فاز صفر)
 
 کیفیت گفتار واقعی (نیازمند آموزش فاز ۳)، دستگاه واقعی Windows/Android (فاز ۶)، API زیر بار هم‌زمانی واقعی. مانع بحرانی برای این فاز: **نداشت**.
+
+---
+
+## بخش closeout فاز ۱ — اصلاحات بازبینی (نسخهٔ 1.1.1 — 2026-11-23)
+
+### چه چیزی اجرا شد و چرا
+
+فقط تست‌های مرتبط با پنج اصلاح closeout (مطابق مأموریت closeout §تست و پذیرش). تغییرات: `ava/runtime/backends.py` (وضعیت مجوز صدا)، `tests/test_runtime.py` (ادعای تجاری → آزمایشی)، `pyproject.toml` (هویت بسته + نسخهٔ 1.1.1)، مستندات، و افزودن یک تست پایدار برای سازگاری مستندات باندل با کد.
+
+### نتایج واقعی
+
+```
+python3 -m pytest tests/test_core_independence.py tests/test_runtime.py tests/test_platform.py
+=> 37 passed, 3 skipped (exit 0) در 19.3s
+```
+
+- **۳ skip، همگی علت‌دار:** سه تست آداپتور Legacy در `test_runtime.py` (خطوط 138–151) با پیام `legacy weights/config not present (commercial-clean checkout)` — وزن‌های Legacy در این چک‌اوت عمداً موجود نیستند (مطابق محدودیت closeout: بازیابی ممنوع) و این تست‌ها به‌درستی skip می‌شوند، نه fail.
+- **تست جدید** `test_bundle_format_matches_documentation` سبز: باندل واقعی دقیقاً `{ava_n1.pt, tokenizer.json, meta.json}` + `meta["format"] == "ava-native-n1"` + هر دو سند مستندات همین فرمت را توصیف می‌کنند و عبارت فرمت فرضی قدیمی در آن‌ها نیست.
+- **اصلاح مجوز صدا** تأیید شد: `test_load_and_list_voices` (نسخهٔ جدید) → `commercial_ok=False` برای همهٔ صداهای Native + مجوز شامل «آزمایشی».
+- **اعتبارسنجی metadata بسته** (`scripts/validate_pyproject.py`): ۱۲/۱۲ PASS — نسخهٔ 1.1.1، بدون pocket-tts/kyutai در metadata، گروه‌های واقعی serve/audio/dev، بدون گروه فرضی [api]، اسکریپت ava-cli.
+- **سازگاری گروه نصب واقعی:** `pip install -e ".[serve]"` با exit 0 نصب شد (fastapi/uvicorn/python-multipart).
+- **شمارش واقعی جمع‌آوری (`pytest --collect-only`):** کل مجموعه **۱۲۹ تست** (۱۱۵ قبلی + ۱۴ استقلال)؛ در اجرای تاریخی فاز ۱ همین مجموعه ۱۲۸ تست داشت (قبل از افزودن تست closeout) و ۱۲۸/۱۲۸ سبز بود.
+- مجموعهٔ کامل در closeout بازاجرای نشد (طبق محدودیت «تست غیرمرتبط ممنوع»)؛ آخرین اجرای کامل معتبر: ۱۲۸/۱۲۸ در فاز ۱.
+
+### خطاها و محدودیت‌های اجرا
+
+- محیط توسعه بین دو پیام بازیافت (recycle) شد؛ مخزن از ZIP فاز ۱ (شامل تاریخچهٔ git) بازسازی و وابستگی‌ها نصب مجدد شدند — هیچ اثری روی محتوا نداشت.
+- نصب اولیهٔ torch دو بار به دلیل کمبود فضای دیسک ناقص ماند؛ با نسخهٔ CPU-only (`torch 2.15.0+cpu`) حل شد.
+- بدون وزن‌های Legacy، سه تست آداپتور Legacy قابل اجرا نیستند (skip صدق می‌کند) — همین وضعیت در چک‌اوت تجاری محصول طبیعی است.
 
 ---
 

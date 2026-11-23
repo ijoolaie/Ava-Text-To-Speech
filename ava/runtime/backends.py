@@ -3,7 +3,10 @@
 
 Two implementations of the `SynthesisModel` contract:
 
-- `NativeN1Backend` — the original AVA-N1 model (product path, MIT weights).
+- `NativeN1Backend` — the original AVA-N1 model (product path). Bundles are
+  experimental (untrained fixtures) until real training happens in phase 3;
+  the final weights license is NOT yet determined, so native voices are
+  marked commercial_ok=False.
 - `LegacyPocketTTSBackend` — optional adapter for the legacy Pocket-TTS
   checkpoint (CC BY-NC 4.0 weights). NOT part of commercial bundles; used for
   comparison/evaluation only. Its voices carry commercial_ok=False.
@@ -39,8 +42,8 @@ class NativeN1Backend:
             out.append(Voice(
                 voice_id=f"ava-n1-{name}", display_name=f"آوا (بوم Native) {sid + 1}",
                 language="fa", backend="ava-n1", ref=str(sid),
-                description="صدای اختصاصی AVA-N1 (بعد از آموزش واقعی، با دادهٔ مجاز)",
-                license="MIT (کد/وزن‌های مخزن)", commercial_ok=True,
+                description="صدای آزمایشی AVA-N1 — وزن آموزش‌ندیده (fixture داخلی)؛ پس از تأمین دیتاست مجاز و آموزش واقعی، وضعیت نهایی مجوز تعیین می‌شود",
+                license="آزمایشی — مجوز وزن نهایی هنوز تعیین نشده", commercial_ok=False,
             ))
         return out
 

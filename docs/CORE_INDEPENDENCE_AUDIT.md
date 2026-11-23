@@ -64,7 +64,7 @@
 1. **`ava/__init__.py`** — قبلاً `TTSModel` (استک Legacy) را در سطح ماژول import می‌کرد؛ یعنی هر `import ava.*` کد اقتباسی pocket-tts را بار می‌کرد. اکنون با **PEP 562 lazy** فقط در صورت درخواست صریح بار می‌شود. سازگاری اسکریپت‌های Legacy حفظ شد.
 2. **مرز Vocoder مستقل** — `ava/audio/vocoder.py` با کلاس انتزاعی `Vocoder`، پیاده‌سازی موقت `GriffinLimVocoder` و رجیستری `get_vocoder`؛ `NativeN1Backend` از این مرز استفاده می‌کند (رفتار خروجی بدون تغییر).
 3. **قراردادهای مرزی مستند** — `docs/NATIVE_CONTRACTS.md` برای چهار مرز Text Frontend / Acoustic Model / Vocoder / Runtime.
-4. **تست‌های استقلال** — `tests/test_core_independence.py` (۱۱ تست): import هسته بدون Legacy در پروسهٔ جدا، پویش AST فهرست ممنوع در مسیر Native، قرارداد frontend/model/vocoder، سنتز کامل در محیط بدون Legacy، CLI، ایزوله‌سازی وب.
+4. **تست‌های استقلال** — `tests/test_core_independence.py` (۱۴ تست پس از اصلاح closeout؛ در اجرای فاز ۱: ۱۳ تست): import هسته بدون Legacy در پروسهٔ جدا، پویش AST فهرست ممنوع در مسیر Native، قرارداد frontend/model/vocoder، سنتز کامل در محیط بدون Legacy، CLI، سازگاری فرمت باندل مستندات↔کد، ایزوله‌سازی وب.
 5. **برچسب‌گذاری Legacy** — سندها و NOTICE به‌روزرسانی شدند؛ هیچ فایل Legacy حذف نشد (قانون §۱-۵).
 
 ## ۷. مواردی که هنوز جایگزین نشده‌اند (شفاف)

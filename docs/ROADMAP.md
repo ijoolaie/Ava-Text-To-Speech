@@ -29,8 +29,8 @@
 - [x] مرز Vocoder مستقل (`ava/audio/vocoder.py`): `Vocoder` انتزاعی + v1 Griffin-Lim موقتِ مستندشده + رجیستری برای vocoder عصبی آینده
 - [x] قراردادهای چهار مرز مستند: Text Frontend / Acoustic Model / Vocoder / Runtime (`docs/NATIVE_CONTRACTS.md`)
 - [x] Runtime و نصب مستند: `docs/RUNTIME_INSTALL.md` (خطای شفاف در نبود وزن، بدون fallback به Legacy)
-- [x] ۱۳ تست استقلال (`tests/test_core_independence.py`) + کل مجموعه ۱۲۸/۱۲۸ سبز
-- [x] نسخه‌بندی: `pyproject.toml` → 1.1.0
+- [x] ۱۴ تست استقلال (`tests/test_core_independence.py` — ۱۳ در اجرای فاز ۱ + ۱ تست closeout؛ اجرای تاریخی مجموعهٔ کامل: ۱۲۸/۱۲۸ سبز، جمع فعلی: ۱۲۹)
+- [x] نسخه‌بندی: `pyproject.toml` → 1.1.0 → **1.1.1 پس از اصلاحات closeout** (هویت مستقل بسته، فرمت باندل هماهنگ با کد، وضعیت مجوز صادقانهٔ صدای Native)
 **مهاجرت‌یافته به فاز ۶ (نه باقی‌ماندهٔ فاز ۱):**
 - پروفایل بیلد «محصول» بدون `weights/` و آداپتور → بخش طبیعی بسته‌بندی (فاز ۶)
 - تصمیم کارفرما دربارهٔ وزن‌های NC در git history → تصمیم مدیریتی؛ از مسیر اجرا جدا شده است
