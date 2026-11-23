@@ -35,7 +35,7 @@ ava-cli speak --text "سلام دنیا" --voice ava-n1-ava --bundle runs/native
 ava-cli serve --bundle runs/native_smoke_v1/bundle
 ```
 
-Status, honest progress and known gaps: [PROJECT_STATUS.md](PROJECT_STATUS.md). Training a production Persian voice needs a GPU and licensed data (guide: [docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md)); the smoke model is a pipeline fixture, not a product voice.
+Status, honest progress and known gaps: [PROJECT_STATUS.md](PROJECT_STATUS.md). The official 7-phase roadmap lives in [docs/ROADMAP.md](docs/ROADMAP.md); the phase-0 assessment in [docs/ASSESSMENT_PHASE0.md](docs/ASSESSMENT_PHASE0.md). Training a production Persian voice needs a GPU and licensed data (guide: [docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md)); the smoke model is a pipeline fixture, not a product voice.
 
 ## Legacy format (historical / comparison — non-commercial weights)
 

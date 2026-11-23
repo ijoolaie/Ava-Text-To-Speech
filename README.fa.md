@@ -35,7 +35,7 @@ ava-cli speak --text "سلام دنیا" --voice ava-n1-ava --bundle runs/native
 ava-cli serve --bundle runs/native_smoke_v1/bundle
 ```
 
-وضعیت واقعی و شکاف‌ها: [PROJECT_STATUS.md](PROJECT_STATUS.md). آموزش صدای فارسی واقعی به GPU و دادهٔ مجاز نیاز دارد ([docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md))؛ مدل smoke صرفاً fixture پایپ‌لاین است، نه صدای محصول.
+وضعیت واقعی و شکاف‌ها: [PROJECT_STATUS.md](PROJECT_STATUS.md). نقشهٔ راه رسمی هفت‌فازی: [docs/ROADMAP.md](docs/ROADMAP.md)؛ ارزیابی فاز صفر: [docs/ASSESSMENT_PHASE0.md](docs/ASSESSMENT_PHASE0.md). آموزش صدای فارسی واقعی به GPU و دادهٔ مجاز نیاز دارد ([docs/TRAINING_GUIDE.md](docs/TRAINING_GUIDE.md))؛ مدل smoke صرفاً fixture پایپ‌لاین است، نه صدای محصول.
 
 ## قالب Legacy (تاریخی/مقایسه — وزن‌های غیرتجاری)
 
