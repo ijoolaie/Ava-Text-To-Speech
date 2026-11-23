@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ava"
-version = "1.0.0"
+version = "1.1.0"
 description = "Ava: 18.2M-parameter Persian text-to-speech in the Pocket TTS format — self-contained repo with weights, web demo and a full training pipeline."
 readme = "README.md"
 requires-python = ">=3.10,<3.15"

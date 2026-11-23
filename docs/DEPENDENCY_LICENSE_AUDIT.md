@@ -15,6 +15,17 @@
 
 نکته: CC BY-NC بازتوزیع با attribution را اجازه می‌دهد اما استفادهٔ تجاری را نه؛ بنابراین در بیلد تجاری این فایل‌ها وجود ندارند و در بیلد توسعه/مقایسه به‌صورت خارجی بارگذاری می‌شوند.
 
+### 1.1 وضعیت استقلال پس از فاز ۱ (2026-11-23)
+
+| جزء | وضعیت در محصول | توضیح |
+| --- | --- | --- |
+| استک اقتباسی pocket-tts (`ava/modules/`, `ava/models/{tts_model,flow_lm,mimi,text_chunking,model_state}.py`, `ava/utils/{config,weights_loading}.py`, `ava/data/`) | **خارج از محصول** (D) | از مسیر اجرای Native جدا شد: `ava/__init__.py` تنبل شد (PEP 562) و مسیر Native هیچ import اجباری به آن ندارد (تست: `tests/test_core_independence.py`) |
+| آداپتور `LegacyPocketTTSBackend` | **خارج از محصول** — اختیاری/مقایسه | import اقتباسی فقط lazy؛ صداهایش `commercial_ok=False` |
+| `web/vendor/phonon-tts/` | **خارج از محصول** (D) | فقط دموی وب Legacy؛ وب Native (`web-native/`) بدون هیچ وندور است؛ حذف فیزیکی فایل‌ها در فاز ۶ |
+| مسیر Native (`ava/language`, `ava/models/native`, `ava/audio`, `ava/runtime`, `ava/voices`, `ava/api`, `ava/cli`, `web-native/`) | **مجاز — کد اصل** (A) | MIT؛ کلاسه‌بندی کامل در `docs/CORE_INDEPENDENCE_AUDIT.md` |
+
+مجموعهٔ کامل کلاسه‌بندی A/B/C/D با قرارداد و جایگزین‌های لازم: `docs/CORE_INDEPENDENCE_AUDIT.md`.
+
 ## 2. وابستگی‌های Python
 
 | بسته | مجوز | تجاری؟ | یادداشت |

@@ -13,6 +13,18 @@ license.
 | `web/vendor/phonon-tts/` | **phonon-tts 0.7.1** npm package (Kyutai's browser/WASM runtime for Pocket-TTS-format models), vendored unmodified | Apache-2.0 / MIT (see `web/vendor/phonon-tts/LICENSE-*` and `THIRD_PARTY_LICENSES.md`) |
 | Training pipeline (`training/`), sharded weights I/O (`ava/utils/weights_io.py`), CLI scripts (`scripts/`), Persian text normalizer (`ava/text_norm.py`), web UI (`web/app.js`, `web/index.html`, `web/persian.js`, `web/persian_tables.js`), tests, docs | Original work of this repository | MIT (see `LICENSE`) |
 
+### Phase 1 independence note (2026-11-23)
+
+Since Phase 1, the **product path** — `ava/language`, `ava/models/native`, `ava/audio`
+(including the `Vocoder` boundary), `ava/runtime` (engine + the native backend),
+`ava/voices`, `ava/api`, `ava/cli` and `web-native/` — is **original work of this
+repository** and imports none of the adapted components above. The adapted
+Pocket-TTS stack is loaded **lazily** (`ava/__init__.py` uses PEP 562) and only
+when explicitly requested for comparison/evaluation. The `web/vendor/phonon-tts/`
+vendored runtime belongs to the legacy web demo (`web/`) only; the native web UI
+(`web-native/`) is self-contained. Details and the full A/B/C/D classification:
+`docs/CORE_INDEPENDENCE_AUDIT.md`.
+
 ## 2. Pre-trained assets (`weights/`)
 
 | File | Origin | License |

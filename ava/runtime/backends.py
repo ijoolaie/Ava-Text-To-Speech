@@ -29,6 +29,8 @@ class NativeN1Backend:
         self.model, self.tok, self.cfg = load_native_bundle(bundle_dir)
         self.lang = LanguageEngine()
         self.bundle_dir = bundle_dir
+        from ava.audio.vocoder import get_vocoder
+        self.vocoder = get_vocoder()  # v1 Griffin-Lim — temporary, see docs/NATIVE_CONTRACTS.md
 
     def _voices(self) -> list[Voice]:
         out = []
@@ -56,8 +58,7 @@ class NativeN1Backend:
         ids = torch.tensor([self.tok.encode(normalized)])
         mel = self.model.infer(ids, torch.tensor([ids.size(1)]), speed=options.speed,
                                speaker_id=torch.tensor([int(voice.ref or 0)]))
-        from ava.audio.mel import griffin_lim_from_mel
-        wav = griffin_lim_from_mel(mel.numpy(), self.cfg)
+        wav = self.vocoder.mel_to_audio(mel.numpy(), self.cfg)
         sr = options.sample_rate or self.cfg.sample_rate
         elapsed = time.time() - t0
         return SynthesisResult(audio=wav.astype(np.float32), sample_rate=sr, voice=voice.voice_id,

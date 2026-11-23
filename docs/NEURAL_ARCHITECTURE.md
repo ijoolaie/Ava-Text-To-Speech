@@ -59,8 +59,8 @@
 
 | نسخه | vocoder | وضعیت |
 | --- | --- | --- |
-| v1 (اکنون) | Griffin-Lim (librosa، ISC) | اجرا و تست شده — کیفیت متوسط، برای صحت‌سنجی پایپ‌لاین |
-| v2 | vocoder عصبی (generator مشابه HiFi-GAN؛ پیاده‌سازی اصلی + آموزش روی همان دیتاست) | طراحی‌شده؛ نیاز به GPU |
+| v1 (اکنون) | Griffin-Lim (librosa، ISC) | اجرا و تست شده — **موقت و غیرنهایی**؛ از فاز ۱ پشت مرز مستقل `Vocoder` (`ava/audio/vocoder.py`) نشسته؛ قرارداد در `docs/NATIVE_CONTRACTS.md` |
+| v2 | vocoder عصبی (generator مشابه HiFi-GAN؛ پیاده‌سازی اصلی + آموزش روی همان دیتاست) | طراحی‌شده؛ نیاز به GPU — پشت همان مرز `get_vocoder()` جایگزین می‌شود، بدون تغییر مدل/runtime |
 
 ## 6. اثبات صحت در این repo
 
