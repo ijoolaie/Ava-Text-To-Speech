@@ -27,6 +27,7 @@ dependencies = [
 audio = ["soundfile>=0.12.0"]
 serve = ["fastapi>=0.100", "uvicorn>=0.13", "python-multipart>=0.0.21"]
 dev = ["pytest>=8", "soundfile>=0.12.0"]
+alifathi = ["onnxruntime>=1.16", "soundfile>=0.12.0"]
 
 [project.scripts]
 ava-cli = "ava.cli:main"

@@ -46,3 +46,15 @@ frozen Mimi codec inherits the non-commercial restriction.
 - Upstream Pocket TTS (Kyutai): <https://github.com/kyutai-labs/pocket-tts>
 - Mimi codec (Kyutai, Moshi): <https://github.com/kyutai-labs/moshi>
 - Upstream Persian checkpoint (CC BY-NC 4.0): <https://huggingface.co/mehdi-hf/cilla-mini>
+
+## Optional Ali Fathi Persian TTS backend
+
+AVA provides an optional, inference-only adapter in `ava/runtime/alifathi.py` for the pretrained Persian VITS model published at <https://huggingface.co/alifthi/persian-TTS>. The model weights are licensed **CC BY 4.0**; commercial use is permitted subject to the license's attribution requirements. **The ONNX weight file is not included in this Git repository.** Obtain `onnx/model.onnx` from the official model repository and place it at `alifathi/model.onnx` (or configure `AVA_ALIFATHI_MODEL_DIR`). No download occurs at runtime.
+
+Required model credit:
+
+> Persian VITS TTS - created by Ali Fathi (<https://github.com/alifthi>)
+
+The model card also requires attribution for LibriTTS-R and, if used, FLEURS. The model card identifies the other listed training corpora as CC0 or MIT and the Piper `_base_model` initialization as MIT, trained on LibriTTS-R. See `alifathi/NOTICE.md` and the official model card for the detailed provenance and attribution requirements.
+
+The adapter is original AVA integration code; no code is copied from the model's training repository, which has no license file. eSpeak NG (GPL-3.0-or-later) is an optional external executable and is not bundled. ONNX Runtime (MIT) is an optional installed dependency and is not vendored. The legacy PocketTTS weights and their CC BY-NC 4.0 terms are not used by this backend.
