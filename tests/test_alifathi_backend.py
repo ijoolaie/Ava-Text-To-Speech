@@ -66,9 +66,9 @@ class TestBackendRegistrationAndLoading(unittest.TestCase):
         """بدون env، مسیر پیش‌فرض `alifathi/` ریشهٔ مخزن است (بارگذاری فقط محلی)."""
         self.assertEqual(str(default_model_dir()), os.path.join(ROOT, "alifathi"))
         with_env = dict(os.environ)
-        os.environ[MODEL_DIR_ENV] = "/tmp/whatever"
+        os.environ[MODEL_DIR_ENV] = os.path.join(tempfile.gettempdir(), "whatever")
         try:
-            self.assertEqual(str(default_model_dir()), "/tmp/whatever")
+            self.assertEqual(str(default_model_dir()), os.path.join(tempfile.gettempdir(), "whatever"))
         finally:
             os.environ.clear(); os.environ.update(with_env)
 
@@ -216,6 +216,7 @@ class TestPhonemeFrontend(unittest.TestCase):
                 os.environ["PATH"] = saved
 
     @unittest.skipUnless(CALIB_READY, "official calibration files not staged in alifathi/")
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_frontend_matches_official_calibration(self):
         """Clean-room frontend reproduces the official tf/calib input EXACTLY."""
         import json
@@ -229,6 +230,7 @@ class TestPhonemeFrontend(unittest.TestCase):
         self.assertEqual(got, inp[0, :ilen].tolist())
 
     @unittest.skipUnless(ONNX_READY, "local ONNX model not staged in alifathi/")
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_ids_inside_symbol_table(self):
         import json
         with open(os.path.join(MODEL_DIR, "model.onnx.json"), encoding="utf-8") as f:
@@ -242,6 +244,7 @@ class TestPhonemeFrontend(unittest.TestCase):
         self.assertGreater(len(ids), 8)
 
     @unittest.skipUnless(ONNX_READY, "local ONNX model not staged in alifathi/")
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_hash_and_dollar_on_real_model_table(self):
         """رفتار `#` و `$` روی جدول واقعی مدل: # دارای ID، $ میانی بدون اثر."""
         import json
@@ -280,6 +283,7 @@ class TestOnnxInferenceAndEngineIntegration(unittest.TestCase):
         self.assertEqual(out.type, "tensor(float)")
         self.assertEqual(len(out.shape), 3)  # [batch, 1, time]
 
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_seven_speakers_with_exact_mapping(self):
         voices = self.model.list_voices()
         self.assertEqual(len(voices), 7)
@@ -295,6 +299,7 @@ class TestOnnxInferenceAndEngineIntegration(unittest.TestCase):
             self.assertGreater(r.duration_s, 0.05, v.voice_id)
             self.assertTrue(np.isfinite(r.audio).all())
 
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_wav_output_at_22050(self):
         r = self.engine.synthesize("سلام دنیا.", "alifathi-fleurs")
         self.assertEqual(r.sample_rate, 22050)
@@ -306,6 +311,7 @@ class TestOnnxInferenceAndEngineIntegration(unittest.TestCase):
         self.assertGreater(info.frames, 0)
         self.assertTrue(wav_bytes_header(r).startswith(b"RIFF"))
 
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_sample_rate_override_resamples(self):
         native = self.engine.synthesize("سلام", "alifathi-fleurs")
         forced = self.engine.synthesize("سلام", "alifathi-fleurs",
@@ -324,17 +330,20 @@ class TestOnnxInferenceAndEngineIntegration(unittest.TestCase):
             with self.assertRaises(ValueError, msg=str(opts)):
                 self.engine.synthesize("سلام", "alifathi-fleurs", opts)
 
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_speed_option_scales_length(self):
         normal = self.engine.synthesize("سلام دنیا.", "alifathi-mana")
         slow = self.engine.synthesize("سلام دنیا.", "alifathi-mana", SynthesisOptions(speed=0.5))
         self.assertGreater(slow.duration_s, normal.duration_s * 1.3)
 
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_persian_punctuation_sentence_synthesizes(self):
         """جملهٔ کامل با علائم فارسی و انگلیسی از موتور صدا تولید می‌کند."""
         r = self.engine.synthesize("سلام، حالتان چطور است؟ سریع جواب بده.", "alifathi-gptinformal")
         self.assertGreater(r.duration_s, 0.5)
         self.assertTrue(np.isfinite(r.audio).all())
 
+    @unittest.skipUnless(ESPEAK_READY, "eSpeak NG not installed locally (optional external component)")
     def test_engine_stream_per_sentence(self):
         chunks = list(self.engine.synthesize_stream("سلام. حالتان چطور است؟", "alifathi-psd_M04"))
         self.assertEqual(len(chunks), 2)
